@@ -1,0 +1,16 @@
+{
+	"name": "ledtest",
+	"owner": "local",
+	"files": [
+		{
+			"name": "main.cpp"
+		},
+		{
+			"name": "gpio.cpp"
+		}
+	],
+	"id": "85118cc89d28f134b80992",
+	"compatibleWith": [
+		"Galago4"
+	]
+}

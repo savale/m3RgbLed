@@ -7,8 +7,11 @@
 #ifndef __LPC13_GPIO_H__
 #define __LPC13_GPIO_H__
 
+
 #include "LPC13xx.h"
-#include "GalagoAPI.h"
+//#include "GalagoAPI.h"
+
+namespace Lpc13 {
 
 /* Pin definitions */
 #define GSCLK_DDR *GPIO1Dir
@@ -53,7 +56,15 @@ setLow((port), (pin)); \
 
 #define outputState(port, pin) ((port) & (1 << (pin)))
 
-/* GPIO Initialisation */
-extern void GpioInit(void);
 
+class Gpio
+{
+public:
+/* GPIO Initialization */
+static void Init(void);
+
+private:
+static void SetGpioInitState(void);
+};
+}
 #endif /* __LPC13_GPIO_H__ */

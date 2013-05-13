@@ -1,12 +1,16 @@
 /**
- * GPIO definitions and initialisation for the Galago
+ * GPIO definitions and initialization for the Galago
  * (c) 2013 Sander van Leeuwen
  *
  */
  
 #include "gpio.h"
- 
-void GpioInit(void)
+
+using namespace LPC1300;
+
+namespace Lpc13 {
+
+void Gpio::Init(void)
 {
    /* Set the PIN functions for controlling the tlc5940 */
    *GPIO1Data = 0; // Todo Sale: not needed?
@@ -35,10 +39,10 @@ void GpioInit(void)
    setOutput(SIN_DDR, SIN_PIN);
    
    /* Set PIN states */
-   SetGpioInitState();
+  // SetGpioInitState();
 }
 
-void SetGpioInitState(void)
+void Gpio::SetGpioInitState(void)
 {
   /* Set the Init PIN states to initialize the tlc5940 */
   setLow(GSCLK_PORT, GSCLK_PIN);
@@ -48,4 +52,6 @@ void SetGpioInitState(void)
   setLow(XLAT_PORT, XLAT_PIN);
   setLow(SIN_PORT, SIN_PIN);
   setHigh(BLANK_PORT, BLANK_PIN); /* Turns off all LEDS */
+}
+
 }
