@@ -7,7 +7,7 @@ Current state of the project:
 
 o) using bitbang method for controlling the tlc5940 chips.
 o) simple pattern is shown: 
-[![ScreenShot](https://raw.github.com/GabLeRoux/WebMole/master/ressources/WebMole_Youtube_Video.png)](http://www.youtube.com/watch?v=SP51AXibXsw)
+[![ScreenShot](http://oi44.tinypic.com/2wc19pd.jpg)](http://www.youtube.com/watch?v=SP51AXibXsw)
 
 Next steps:
 
