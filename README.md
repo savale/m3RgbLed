@@ -6,7 +6,8 @@ Firmware for an ARM cortex m3 (lpc1343) galago board controlling multiple tlc594
 Current state of the project:
 
 o) using bitbang method for controlling the tlc5940 chips.
-o) simple pattern is shown: http://www.youtube.com/watch?v=SP51AXibXsw
+o) simple pattern is shown: 
+[![ScreenShot](https://raw.github.com/GabLeRoux/WebMole/master/ressources/WebMole_Youtube_Video.png)](http://www.youtube.com/watch?v=SP51AXibXsw)
 
 Next steps:
 
