@@ -1,5 +1,5 @@
 /**
- * GPIO definitions and initialisation for the Galago
+ * GPIO definitions and initialization for the Galago
  * (c) 2013 Sander van Leeuwen
  *
  */
@@ -14,13 +14,13 @@
 namespace Lpc13 {
 
 /* Pin definitions */
-#define GSCLK_DDR *GPIO1Dir
-#define GSCLK_PORT *GPIO1Data
-#define GSCLK_PIN 8
+#define GSCLK_DDR *GPIO0Dir
+#define GSCLK_PORT *GPIO0Data
+#define GSCLK_PIN 1
 
-#define SIN_DDR *GPIO0Dir
-#define SIN_PORT *GPIO0Data
-#define SIN_PIN 1
+#define SIN_DDR *GPIO1Dir
+#define SIN_PORT *GPIO1Data
+#define SIN_PIN 8
 
 #define SCLK_DDR *GPIO2Dir
 #define SCLK_PORT *GPIO2Data
@@ -41,6 +41,10 @@ namespace Lpc13 {
 #define XLAT_DDR *GPIO0Dir
 #define XLAT_PORT *GPIO0Data
 #define XLAT_PIN 6
+
+#define LED_DDR *GPIO1Dir
+#define LED_PORT *GPIO1Data
+#define LED_PIN 10
 
 /* Pin functions */
 #define setOutput(ddr, pin) ((ddr) |= (1 << (pin))) // TODO SaLe: use _BIT()?

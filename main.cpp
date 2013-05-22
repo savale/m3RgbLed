@@ -15,41 +15,9 @@ using namespace Lpc13;
 
 #define PART lpc1343
 
-/*
-#define GSCLK_DDR *GPIO1Dir
-#define GSCLK_PORT *GPIO1Data
-#define GSCLK_PIN 8
-#define SIN_DDR *GPIO0Dir
-#define SIN_PORT *GPIO0Data
-#define SIN_PIN 1
-#define SCLK_DDR *GPIO2Dir
-#define SCLK_PORT *GPIO2Data
-#define SCLK_PIN 0
-#define BLANK_DDR *GPIO0Dir
-#define BLANK_PORT *GPIO0Data
-#define BLANK_PIN 2
-#define DCPRG_DDR *GPIO1Dir
-#define DCPRG_PORT *GPIO1Data
-#define DCPRG_PIN 9
-#define VPRG_DDR *GPIO3Dir
-#define VPRG_PORT *GPIO3Data
-#define VPRG_PIN 2
-#define XLAT_DDR *GPIO0Dir
-#define XLAT_PORT *GPIO0Data
-#define XLAT_PIN 6
-*/
-#define TLC5940_N 10
 
-/*
-#define setOutput(ddr, pin) ((ddr) |= (1 << (pin)))
-#define setLow(port, pin) ((port) &= ~(1 << (pin)))
-#define setHigh(port, pin) ((port) |= (1 << (pin)))
-#define pulse(port, pin) do { \
-setHigh((port), (pin)); \
-setLow((port), (pin)); \
-} while (0)
-#define outputState(port, pin) ((port) & (1 << (pin)))
-*/
+#define TLC5940_N 10 // if not fast enough, play with the interupt and gsclk
+
 struct rgbLed {
 	u16 red;
 	u16 green;
@@ -110,6 +78,7 @@ int sleepForInterval(int interval)
       __asm volatile("nop"::);
 }
 
+
 int init()
 {
 	/* Use external 12Mhz clock for 72Mhz speed */ 
@@ -119,72 +88,82 @@ int init()
 	*PLLSource = PLLSource_ExternalClock;
 	*MainBusDivider = 1;
 
-	Gpio::Init();
+/* Max GSCLK speed = 30Mhz */
+*ClockOutputSource = ClockOutputSource_MainClock;
+*ClockOutputSourceUpdate = ClockOutputSourceUpdate_Enable;
+*ClockOutputDivider = 1; // Start with 72Mhz / 4 =  18Mhz
 
-/*	
-	*GPIO1Data = 0;
-  	*IOConfigPIO1_4 = IOConfigPIO1_4_Function_PIO | IOConfigPIO1_4_PullDown | IOConfigPIO1_4_DigitalMode;
-  	*IOConfigPIO0_1 = IOConfigPIO0_1_Function_PIO | IOConfigPIO0_1_PullDown;
-  	*IOConfigPIO0_2 = IOConfigPIO0_2_Function_PIO | IOConfigPIO0_2_PullDown;
-  	*IOConfigPIO1_0 = IOConfigPIO1_0_Function_PIO | IOConfigPIO1_0_PullDown | IOConfigPIO1_0_DigitalMode;
-  	*IOConfigPIO1_1 = IOConfigPIO1_1_Function_PIO | IOConfigPIO1_1_PullDown | IOConfigPIO1_1_DigitalMode;
-  	*IOConfigPIO1_9 = IOConfigPIO1_9_Function_PIO | IOConfigPIO1_9_PullDown;
-  	*IOConfigPIO1_8 = IOConfigPIO1_8_Function_PIO | IOConfigPIO1_8_PullDown;
-  	*IOConfigPIO2_0 = IOConfigPIO2_0_Function_PIO | IOConfigPIO2_0_PullDown;
-  	*IOConfigPIO0_6 = IOConfigPIO0_6_Function_PIO | IOConfigPIO0_6_PullDown;
-  	*IOConfigPIO0_9 = IOConfigPIO0_9_Function_PIO | IOConfigPIO0_9_PullDown;
-  	*IOConfigPIO3_2 = IOConfigPIO3_2_Function_PIO | IOConfigPIO3_2_PullDown;
-  	*IOConfigPIO0_11 = IOConfigPIO0_11_Function_PIO | IOConfigPIO0_11_PullDown | IOConfigPIO0_11_DigitalMode;
-  	// init tlc5940
-	setOutput(GSCLK_DDR, GSCLK_PIN);
-	setOutput(SCLK_DDR, SCLK_PIN);
-	setOutput(DCPRG_DDR, DCPRG_PIN);
-	setOutput(VPRG_DDR, VPRG_PIN);
-	setOutput(XLAT_DDR, XLAT_PIN);
-	setOutput(BLANK_DDR, BLANK_PIN);
-	setOutput(SIN_DDR, SIN_PIN);
-	setLow(GSCLK_PORT, GSCLK_PIN);
-	setLow(SCLK_PORT, SCLK_PIN);
-	setLow(DCPRG_PORT, DCPRG_PIN);
-	setHigh(VPRG_PORT, VPRG_PIN);
-	setLow(XLAT_PORT, XLAT_PIN);
-	setLow(SIN_PORT, SIN_PIN);
-	setHigh(BLANK_PORT, BLANK_PIN);
-	*/
-	sleepForInterval(5000);
+
+
+
+
+setHigh(*ClockControl, 6);
+setHigh(*ClockControl, 7); // enable timer0 clock
+
+	Gpio::Init();
+	
+//    *Timer0Interrupts = 0b0000; // op 1 zetten om match 0 interrupt te stoppen      
+    
+ 
+*Timer0Prescaler = 0; //(4096); // 16 bit prescaler
+
+*Timer0Match0 = 4096;
+setHigh(*Timer0MatchControl,0);
+setHigh(*Timer0MatchControl,1);
+setLow(*Timer0MatchControl,2);
+//	*Timer0MatchControl |=  0b011; // 12bit register, interrupt en reset?
+	//*Timer0CaptureControl =
+//	setHigh(*InterruptEnableClear1,0); //om interrupt te clearen?
+//	*InterruptEnableSet1 = Interrupt1_Timer0;
+//setHigh(*InterruptEnableClear1,9);
+
+    setLow(*Timer0Control, 0);
+    setHigh(*Timer0Control, 1);
+    setLow(*Timer0Control, 1);
+    setHigh(*Timer0Control, 0);
+//	*Timer0Control |= 0b10; // control reset
+//	*Timer0Control |= 0b01; // control start / reset
+
+
+//setHigh(*Timer0Interrupts,0);
+    setHigh(*InterruptEnableSet1,9);
+//	sleepForInterval(5000);
 }
 
-void TLC5940_SetGS_And_GS_PWM(void) {
-        bool firstCycleFlag = false;
-        static const u32 rgbBits = 3 * 12;
+static bool s_isData = false;
 
-        if (outputState(VPRG_PORT, VPRG_PIN)) {
-                setLow(VPRG_PORT, VPRG_PIN);
-                firstCycleFlag = true;
-        }
+void IRQ_Timer16_0(void)
+{   
+				*Timer0Interrupts = 1; // clears the interupt
+	setHigh(LED_PORT, LED_PIN);
+	u8 firstCycleFlag = 0;
+	static const u32 rgbBits = 3 * 12;
+	static u8 xlatNeedsPulse = 0;
+	setHigh(BLANK_PORT, BLANK_PIN);
+	if (outputState(VPRG_PORT, VPRG_PIN)) {
+		setLow(VPRG_PORT, VPRG_PIN);
+		firstCycleFlag = 1;
+	}
+	if (xlatNeedsPulse) {
+		pulse(XLAT_PORT, XLAT_PIN);
+		xlatNeedsPulse = 0;
+	}
+	if (firstCycleFlag)
+	{
+		pulse(SCLK_PORT, SCLK_PIN);
+	}
+	setLow(BLANK_PORT, BLANK_PIN);
+	// Below this we have 4096 cycles to shift in the data for the next cycle
+	u32 Data_Counter = 0;
 
-        u32 GSCLK_Counter = 0;
-        u32 Data_Counter = 0;
-        setLow(BLANK_PORT, BLANK_PIN);
 
-        for (;;) {
-                if (GSCLK_Counter > 4096) {
-                        // GSCLK_Counter = 4096
-                        setHigh(BLANK_PORT, BLANK_PIN);
-                        pulse(XLAT_PORT, XLAT_PIN);
-                        if (firstCycleFlag) {
-                                pulse(SCLK_PORT, SCLK_PIN);
-                                firstCycleFlag = false;
-                        }
-                        break;
-                } else {
-                        // GSCLK_Counter < 4096
-                        /* Now serialize the data */
-                        if ( !(Data_Counter > ((TLC5940_N * 192) - 1) ) )
-                        {
-                                u32 invertedDataCounter = (TLC5940_N * 192) - 1 - Data_Counter;
-                                u32 ledValue = 0;
-                                u32 ledNumber = (invertedDataCounter / rgbBits);
+	for (;;) {
+		if ( !(Data_Counter > ((TLC5940_N * 192) - 1) ) && s_isData )
+		{
+								setLow(LED_PORT, LED_PIN);
+			u32 invertedDataCounter = (TLC5940_N * 192) - 1 - Data_Counter;
+            u32 ledValue = 0;
+            u32 ledNumber = (invertedDataCounter / rgbBits);
 
                                 struct rgbLed currentLed = s_rgbLeds[ledNumber];
                                 u32 ledModulo = (invertedDataCounter % rgbBits);
@@ -214,13 +193,13 @@ void TLC5940_SetGS_And_GS_PWM(void) {
                                 
                                 pulse(SCLK_PORT, SCLK_PIN);
                                 Data_Counter++;
-                        }
-                }
-                pulse(GSCLK_PORT, GSCLK_PIN);
-                GSCLK_Counter++;
-        }
-}
-
+        } else {
+        	s_isData = false;
+							xlatNeedsPulse = 1;
+							break;
+						}
+					}
+				}
 
 int main(void) {
 init();
@@ -232,14 +211,56 @@ for(p =0; p <11; p++)
 	s_rgbLeds[p].green = 0;
 	s_rgbLeds[p].blue = 0;
 }
-	for(t = 0; t < 40; t++)
-	{
-		TLC5940_SetGS_And_GS_PWM();
-		sleepForInterval(5000);
+	for(t = 0; t < 4; t++)
+	{		
+		sleepForInterval(500000);
 	}
 
 u16 i;
 u16 j;
+
+for (j= 0; j < 10; j++) {
+	
+	for(i= 0; i < 10; i++)
+	{
+	 s_rgbLeds[j].blue += 2;
+	 s_rgbLeds[j].red += 8;
+	 s_rgbLeds[j].green = 0;
+	sleepForInterval(10000);
+	s_isData = true;
+	}
+		for(i= 0; i < 10; i++)
+	{
+	 s_rgbLeds[j].blue -= 2;
+	 s_rgbLeds[j].red -= 8;
+	 s_rgbLeds[j].green = 0;
+	sleepForInterval(10000);
+	s_isData = true;
+	}
+}
+for (j= 8; j > 0; j--) {
+	
+	for(i= 0; i < 10; i++)
+	{
+	 s_rgbLeds[j].blue += 4;
+	 s_rgbLeds[j].red = 0 ;
+	 s_rgbLeds[j].green += 8;
+	sleepForInterval(10000);
+	s_isData = true;
+	}
+		for(i= 0; i < 10; i++)
+	{
+	 s_rgbLeds[j].blue -= 4;
+	 s_rgbLeds[j].red = 0;
+	 s_rgbLeds[j].green -= 8;
+	sleepForInterval(10000);
+	s_isData = true;
+	}
+}
+
+
+
+
 for (;;) {
 for(i = 0; i < 25; i++)
 {
@@ -255,11 +276,9 @@ for(i = 0; i < 25; i++)
 	 	 s_rgbLeds[j].green = colorWeWant.green;
 	}
 
-	for(t = 0; t < 30; t++)
-	{
-		TLC5940_SetGS_And_GS_PWM();
-		sleepForInterval(50);
-	}
+s_isData = true;
+sleepForInterval(1000000);
+
 }
 }
 for (;;) {
@@ -270,7 +289,7 @@ for (;;) {
 	 s_rgbLeds[4].red += 8;
 	 s_rgbLeds[4].green = 0;
 	// sleepForInterval(10);
-     TLC5940_SetGS_And_GS_PWM();	 
+	s_isData = true;
 	}
 	for(i= 0; i < 100; i++)
 	{
@@ -278,7 +297,7 @@ for (;;) {
 	 s_rgbLeds[4].red -= 8;
 	 s_rgbLeds[4].green = 0;
 	// sleepForInterval(10);
-     TLC5940_SetGS_And_GS_PWM();	 
+	s_isData = true;
 	}
 	sleepForInterval(5000);
 	
@@ -287,29 +306,18 @@ for (;;) {
 	 s_rgbLeds[3].blue += 4;
 	 s_rgbLeds[3].red = 0;
 	 s_rgbLeds[3].green += 5;
-	// sleepForInterval(10);
-     TLC5940_SetGS_And_GS_PWM();	 
+	// sleepForInterval(10);	 
+	s_isData = true;
 	}
 	for(i= 0; i < 100; i++)
 	{
 	 s_rgbLeds[3].blue -= 4;
 	 s_rgbLeds[3].red = 0;
 	 s_rgbLeds[3].green -= 5;
-	// sleepForInterval(10);
-     TLC5940_SetGS_And_GS_PWM();	 
+	 s_isData = true;
+	// sleepForInterval(10);	 
 	}
 
-
-//gsData[181] = 1;
-//gsData[13] = 0;
-sleepForInterval(5);
-TLC5940_SetGS_And_GS_PWM();
-
-//gsData[181] = 0;
-//gsData[13] = 1;
-sleepForInterval(5);
-//gsData[186] = 0;
-TLC5940_SetGS_And_GS_PWM();
 }
 return 0;
 }

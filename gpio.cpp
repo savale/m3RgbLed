@@ -17,7 +17,8 @@ void Gpio::Init(void)
    
    // Todo Sale: remove unneeded and move the PIO knowledge to the header
    *IOConfigPIO1_4 = IOConfigPIO1_4_Function_PIO | IOConfigPIO1_4_PullDown | IOConfigPIO1_4_DigitalMode;
-   *IOConfigPIO0_1 = IOConfigPIO0_1_Function_PIO | IOConfigPIO0_1_PullDown;
+   //*IOConfigPIO0_1 = IOConfigPIO0_1_Function_PIO | IOConfigPIO0_1_PullDown;
+   *IOConfigPIO0_1 = IOConfigPIO0_1_Function_CLKOUT;
    *IOConfigPIO0_2 = IOConfigPIO0_2_Function_PIO | IOConfigPIO0_2_PullDown;
    *IOConfigPIO1_0 = IOConfigPIO1_0_Function_PIO | IOConfigPIO1_0_PullDown | IOConfigPIO1_0_DigitalMode;
    *IOConfigPIO1_1 = IOConfigPIO1_1_Function_PIO | IOConfigPIO1_1_PullDown | IOConfigPIO1_1_DigitalMode;
@@ -28,6 +29,7 @@ void Gpio::Init(void)
    *IOConfigPIO0_9 = IOConfigPIO0_9_Function_PIO | IOConfigPIO0_9_PullDown;
    *IOConfigPIO3_2 = IOConfigPIO3_2_Function_PIO | IOConfigPIO3_2_PullDown;
    *IOConfigPIO0_11 = IOConfigPIO0_11_Function_PIO | IOConfigPIO0_11_PullDown | IOConfigPIO0_11_DigitalMode;
+   *IOConfigPIO1_10 = IOConfigPIO1_10_Function_PIO | IOConfigPIO1_10_PullUp | IOConfigPIO1_10_DigitalMode;
    
    /* Set the PIN direction */
    setOutput(GSCLK_DDR, GSCLK_PIN);
@@ -37,9 +39,10 @@ void Gpio::Init(void)
    setOutput(XLAT_DDR, XLAT_PIN);
    setOutput(BLANK_DDR, BLANK_PIN);
    setOutput(SIN_DDR, SIN_PIN);
+   setOutput(LED_DDR, LED_PIN);
    
    /* Set PIN states */
-  // SetGpioInitState();
+   SetGpioInitState();
 }
 
 void Gpio::SetGpioInitState(void)
@@ -52,6 +55,7 @@ void Gpio::SetGpioInitState(void)
   setLow(XLAT_PORT, XLAT_PIN);
   setLow(SIN_PORT, SIN_PIN);
   setHigh(BLANK_PORT, BLANK_PIN); /* Turns off all LEDS */
+    setHigh(LED_PORT, LED_PIN); /* Turns off LED */
 }
 
 }
