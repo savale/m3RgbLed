@@ -40,11 +40,13 @@ stuct ledControlState
 struct LedControl
 {
   Color       color;                /* The color the led will have imediately */
-  Color       nextColor;            /* The color the led will have after the action completed */
   u16         powerPercentage;      /* The power the led will have imediately, 0% is off, 100% is full power */
-  u16         nextPowerPercentage;  /* The power the led will have after the action completed */
   ActionType  actionType;           /* Type of action */
-  u16         actionDuration;       /* duration of the action in case of a timed action (miliseconds) */
+  struct next{                      /* In case there is an action selected that needs a next state */
+    Color       nextColor;            /* The color the led will have after the action completed */
+    u16         nextPowerPercentage;  /* The power the led will have after the action completed */
+    u16         actionDuration;       /* duration of the action in case of a timed action (miliseconds) */
+  };
 };
 
 
@@ -70,28 +72,77 @@ void waitForNextBeat(void);
 void waitForAllCompleted(void);
 
 
-/* some default actions */
-ledControl ledOff = {
-  color=None;
-  nextColor=None;
-  powerPercentage=0;
-  nextPowerPercentage=0;
-  actionType=Normal;
-  actionDuration = 0;
-}
+/* some functions with default actions */
+ledControl ledOff(void);
+ledControl ledOn(Color color, u16 power);
 
 
-/* Example usage */
+/* RGB color defines */
+#define yellow (4095, 4095, 0)
+#define green (0, 4095, 0)
+
+/* 
+ * Example creation of a pattern 
+ */
+
+setColor(ColorOne, yellow); /* define color one to yellow */
+setColor(ColorTwo, green); /* define color two to green */
+
+/* custom action */
 LedControl nextStep = {
-  color=None;
-  nextColor=One;
-  powerPercentage=0;
-  nextPowerPercentage=100;
-  actionType=OnNextBeatTimed;
-  actionDuration = 200;
+  color=None; /* led off */
+  nextColor=One; /* yellow */
+  powerPercentage=0; /* Start with led off */
+  nextPowerPercentage=100; /* Ends with full power on */
+  actionType=OnNextBeatTimed; /* a fade in action that starts on the next audio beat */
+  actionDuration = 200; /* duration of the fade */
 }
 
-/* Start with all leds off and fade them on during 200ms on the next audio beat (100%, ColorOne) */ 
+/* start of the pattern */
+setLedControl(ledOff, LED_ALL); /* Start pattern with turning off all leds */
+
+/* wait three audio beats */
+waitForNextBeat();
+waitForNextBeat();
+waitForNextBeat();
+
+/* With all leds off and fade them on during 200ms on the next audio beat (100%, yellow) */
 setLedControl(nextStep, LED_ALL);
 waitForAllCompleted(void); /* wait for the action to be completed */
-setLedControl(ledOff, LED_ALL);
+
+setLedControl(ledOff, LED_ALL); /* Turn off all leds again */
+
+/* wait three audio beats again */
+waitForNextBeat();
+waitForNextBeat();
+waitForNextBeat();
+
+/* With all leds off and fade them on during 200ms on the next audio beat (100%, yellow) */
+setLedControl(nextStep, LED_ALL);
+waitForAllCompleted(void); /* wait for the action to be completed */
+
+/* Now start with a timed pattern (led power 50%) */
+setLedControl(ledOn(one, 50), LED_01 & LED_02); /* Set led1 and 2 to yellow */
+waitTime(500);                                  /* wait half a second */
+setLedControl(ledOff, LED_ALL);                 /* All leds off */
+setLedControl(ledOn(two, 50), LED_03 & LED_04 & LED_01); /* Set led3, led4 and led 1 to green */
+waitTime(1000);                                  /* wait a second */
+
+/* Now morph the led3, led4 and led 1 from green to yellow */
+
+/* first set the next step */
+nextStep = {
+  color=Two; /* led gree */
+  nextColor=One; /* yellow */
+  powerPercentage=50; /* half power*/
+  nextPowerPercentage=50; /* Ends with half power */
+  actionType=Timed; /* a color morph action */
+  actionDuration = 500; /* duration of the morph is half a second */
+}
+
+/* do the morph */
+setLedControl(nextStep, LED_03 & LED_04 & LED_01);
+waitForAllCompleted(void); /* wait for the action to be completed */
+
+setLedControl(ledOff, LED_ALL); /* Turn off all leds again */
+
