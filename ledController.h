@@ -44,7 +44,7 @@ struct LedControl
   u16         powerPercentage;      /* The power the led will have imediately, 0% is off, 100% is full power */
   u16         nextPowerPercentage;  /* The power the led will have after the action completed */
   ActionType  actionType;           /* Type of action */
-  u16         durationAction;       /* duration of the action in case of a timed action (miliseconds) */
+  u16         actionDuration;       /* duration of the action in case of a timed action (miliseconds) */
 };
 
 
@@ -68,3 +68,30 @@ void waitForNextBeat(void);
 
 /* Keeps the state to busy while not detecting a "beat" in the audio */
 void waitForAllCompleted(void);
+
+
+/* some default actions */
+ledControl ledOff = {
+  color=None;
+  nextColor=None;
+  powerPercentage=0;
+  nextPowerPercentage=0;
+  actionType=Normal;
+  actionDuration = 0;
+}
+
+
+/* Example usage */
+LedControl nextStep = {
+  color=None;
+  nextColor=One;
+  powerPercentage=0;
+  nextPowerPercentage=100;
+  actionType=OnNextBeatTimed;
+  actionDuration = 200;
+}
+
+/* Start with all leds off and fade them on during 200ms on the next audio beat (100%, ColorOne) */ 
+setLedControl(nextStep, LED_ALL);
+waitForAllCompleted(void); /* wait for the action to be completed */
+setLedControl(ledOff, LED_ALL);
