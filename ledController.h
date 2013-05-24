@@ -37,12 +37,16 @@ stuct ledControlState
 };
 
 
+/* Idea: have two things: current color and the ability to add one action */
+
 struct LedControl
 {
   Color       color;                /* The color the led will have imediately */
   u16         powerPercentage;      /* The power the led will have imediately, 0% is off, 100% is full power */
-  ActionType  actionType;           /* Type of action */
-  struct next{                      /* In case there is an action selected that needs a next state */
+  
+  /* Ability to add an action to a led */
+  struct action {                      /* In case there is an action selected that needs a next state */
+    ActionType  actionType;           /* Type of action */
     Color       nextColor;            /* The color the led will have after the action completed */
     u16         nextPowerPercentage;  /* The power the led will have after the action completed */
     u16         actionDuration;       /* duration of the action in case of a timed action (miliseconds) */
